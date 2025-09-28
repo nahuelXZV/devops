@@ -2,9 +2,6 @@ pipeline {
     agent any
 
     environment {
-        GIT_CREDENTIALS = "git-credentials"
-        DOCKER_IMAGE_NAME = "devsecops-labs/app:latest"
-        SSH_CREDENTIALS = "ssh-deploy-key"
         STAGING_URL = "http://vue-nginx-1:80 "
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
