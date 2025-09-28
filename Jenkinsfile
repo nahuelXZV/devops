@@ -9,6 +9,7 @@ pipeline {
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
         ZAP_BIN = "/opt/zaproxy/zap.sh"
+        DEP_CHECK_BIN = "/opt/dependency-check/bin/dependency-check.sh"
     }
 
     options {
@@ -45,7 +46,7 @@ pipeline {
                 echo "Running OWASP Dependency-Check..."
                 sh """
                     mkdir -p dependency-check-reports
-                    dependency-check.sh --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
+                     ${DEP_CHECK_BIN} --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
                 """
                 archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
             }
@@ -64,7 +65,6 @@ pipeline {
                             echo "Tests failed (continue)"
                         fi
                     fi
-                    npm run build
                 '''
             }
         }
@@ -73,7 +73,7 @@ pipeline {
             steps {
                 echo "Deploying to staging with docker-compose..."
                 sshagent(['vue-nginx-1']) {
-                    sh "scp -o StrictHostKeyChecking=no -r dist/* ${STAGING_SERVER}:${REMOTE_PATH}/"
+                    sh "scp -o StrictHostKeyChecking=no -r ./* ${STAGING_SERVER}:${REMOTE_PATH}/"
                 }
             }
         }
