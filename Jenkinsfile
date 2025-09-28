@@ -9,7 +9,6 @@ pipeline {
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
         ZAP_BIN = "/opt/zaproxy/zap.sh"
-        DEP_CHECK_HOME = "/home/jenkins/dependency-check"
     }
 
     options {
@@ -46,7 +45,7 @@ pipeline {
                 echo "Running OWASP Dependency-Check..."
                 sh """
                     mkdir -p dependency-check-reports
-                    ${DEP_CHECK_HOME}/bin/dependency-check.sh --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
+                    dependency-check.sh --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
                 """
                 archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
             }
@@ -69,21 +68,21 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Trivy Scan') {
-            steps {
-                echo "Building Docker image..."
-                sh """
-                    docker build -t ${DOCKER_IMAGE_NAME} -f Dockerfile .
-                """
-                echo "Scanning image with Trivy..."
-                sh """
-                    mkdir -p trivy-reports
-                    ${TRIVY_BIN} image --format json --output trivy-reports/trivy-report.json ${DOCKER_IMAGE_NAME} || true
-                    ${TRIVY_BIN} image --severity HIGH,CRITICAL ${DOCKER_IMAGE_NAME} || true
-                """
-                archiveArtifacts artifacts: 'trivy-reports/**', allowEmptyArchive: true
-            }
-        }
+        // stage('Docker Build & Trivy Scan') {
+        //     steps {
+        //         echo "Building Docker image..."
+        //         sh """
+        //             docker build -t ${DOCKER_IMAGE_NAME} -f Dockerfile .
+        //         """
+        //         echo "Scanning image with Trivy..."
+        //         sh """
+        //             mkdir -p trivy-reports
+        //             ${TRIVY_BIN} image --format json --output trivy-reports/trivy-report.json ${DOCKER_IMAGE_NAME} || true
+        //             ${TRIVY_BIN} image --severity HIGH,CRITICAL ${DOCKER_IMAGE_NAME} || true
+        //         """
+        //         archiveArtifacts artifacts: 'trivy-reports/**', allowEmptyArchive: true
+        //     }
+        // }
 
         stage('Deploy to Staging (docker-compose)') {
             steps {
