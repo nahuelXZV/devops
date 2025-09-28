@@ -48,7 +48,7 @@ pipeline {
                 //     mkdir -p dependency-check-reports
                 //      ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
                 // """
-                archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
+                // archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
             }
         }
 
