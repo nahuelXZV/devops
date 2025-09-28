@@ -64,37 +64,13 @@ pipeline {
                             echo "Tests failed (continue)"
                         fi
                     fi
+                    npm run build
                 '''
             }
         }
 
-        // stage('Docker Build & Trivy Scan') {
-        //     steps {
-        //         echo "Building Docker image..."
-        //         sh """
-        //             docker build -t ${DOCKER_IMAGE_NAME} -f Dockerfile .
-        //         """
-        //         echo "Scanning image with Trivy..."
-        //         sh """
-        //             mkdir -p trivy-reports
-        //             ${TRIVY_BIN} image --format json --output trivy-reports/trivy-report.json ${DOCKER_IMAGE_NAME} || true
-        //             ${TRIVY_BIN} image --severity HIGH,CRITICAL ${DOCKER_IMAGE_NAME} || true
-        //         """
-        //         archiveArtifacts artifacts: 'trivy-reports/**', allowEmptyArchive: true
-        //     }
-        // }
-
-        stage('Deploy to Staging (docker-compose)') {
-            // steps {
-            //     echo "Deploying to staging with docker-compose..."
-            //     sh '''
-            //         docker-compose -f docker-compose.yml down || true
-            //         docker-compose -f docker-compose.yml up -d --build
-            //         sleep 8
-            //         docker ps -a
-            //     '''
-            // }
-            steps {
+        stage('Deploy to Staging ') {
+            {
                 echo "Deploying to staging with docker-compose..."
                 sshagent(['vue-nginx-1']) {
                  sh "scp -o StrictHostKeyChecking=no -r dist/* ${STAGING_SERVER}:${REMOTE_PATH}/"
