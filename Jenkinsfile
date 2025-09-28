@@ -69,11 +69,11 @@ pipeline {
             }
         }
 
-        stage('Deploy to Staging ') {
-            {
+        stage('Deploy to Staging') {
+            steps {
                 echo "Deploying to staging with docker-compose..."
                 sshagent(['vue-nginx-1']) {
-                 sh "scp -o StrictHostKeyChecking=no -r dist/* ${STAGING_SERVER}:${REMOTE_PATH}/"
+                    sh "scp -o StrictHostKeyChecking=no -r dist/* ${STAGING_SERVER}:${REMOTE_PATH}/"
                 }
             }
         }
