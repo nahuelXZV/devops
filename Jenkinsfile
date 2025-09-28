@@ -2,6 +2,8 @@ pipeline {
     agent any
 
     environment {
+        STAGING_SERVER = 'user@vue-nginx-1'
+        REMOTE_PATH = '/var/www/html'
         STAGING_URL = "http://vue-nginx-1:80 "
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
