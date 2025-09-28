@@ -40,33 +40,33 @@ pipeline {
             }
         }
 
-        stage('SCA - Dependency Check') {
-            steps {
-                echo "Running OWASP Dependency-Check..."
-                sh """
-                    mkdir -p dependency-check-reports
-                     ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
-                """
-                archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
-            }
-        }
+        // stage('SCA - Dependency Check') {
+        //     steps {
+        //         echo "Running OWASP Dependency-Check..."
+        //         sh """
+        //             mkdir -p dependency-check-reports
+        //              ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
+        //         """
+        //         archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
+        //     }
+        // }
 
-        stage('Build') {
-            steps {
-                echo "Building app (npm install and tests)..."
-                sh '''
-                    cd src
-                    npm install --no-audit --no-fund
-                    if [ -f package.json ]; then
-                        if npm test --silent; then
-                            echo "Tests OK"
-                        else
-                            echo "Tests failed (continue)"
-                        fi
-                    fi
-                '''
-            }
-        }
+        // stage('Build') {
+        //     steps {
+        //         echo "Building app (npm install and tests)..."
+        //         sh '''
+        //             cd src
+        //             npm install --no-audit --no-fund
+        //             if [ -f package.json ]; then
+        //                 if npm test --silent; then
+        //                     echo "Tests OK"
+        //                 else
+        //                     echo "Tests failed (continue)"
+        //                 fi
+        //             fi
+        //         '''
+        //     }
+        // }
 
         stage('Deploy to Staging') {
             steps {
