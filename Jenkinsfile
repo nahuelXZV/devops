@@ -74,12 +74,12 @@ pipeline {
                 echo "Deploying to staging with docker-compose..."
                 sshagent(['vue-nginx-1']) {
                     sh "scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/"
-                   ssh -o StrictHostKeyChecking=no user@vue-nginx-1 bash -c '
+                    sh "ssh -o StrictHostKeyChecking=no user@vue-nginx-1 bash -c '
                     export PATH=/home/user/.nvm/versions/node/v18.20.8/bin:$PATH
                     cd /var/www/html
                     npm install --no-audit --no-fund
                     npm run start
-                    '
+                    '"
                 }
             }
         }
