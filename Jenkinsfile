@@ -5,7 +5,7 @@ pipeline {
         GIT_CREDENTIALS = "git-credentials"
         DOCKER_IMAGE_NAME = "devsecops-labs/app:latest"
         SSH_CREDENTIALS = "ssh-deploy-key"
-        STAGING_URL = "http://localhost:3000"
+        STAGING_URL = "http://vue-nginx-1:80 "
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
         ZAP_BIN = "/opt/zaproxy/zap.sh"
@@ -85,14 +85,20 @@ pipeline {
         // }
 
         stage('Deploy to Staging (docker-compose)') {
+            // steps {
+            //     echo "Deploying to staging with docker-compose..."
+            //     sh '''
+            //         docker-compose -f docker-compose.yml down || true
+            //         docker-compose -f docker-compose.yml up -d --build
+            //         sleep 8
+            //         docker ps -a
+            //     '''
+            // }
             steps {
                 echo "Deploying to staging with docker-compose..."
-                sh '''
-                    docker-compose -f docker-compose.yml down || true
-                    docker-compose -f docker-compose.yml up -d --build
-                    sleep 8
-                    docker ps -a
-                '''
+                sshagent(['vue-nginx-1']) {
+                 sh "scp -o StrictHostKeyChecking=no -r dist/* ${STAGING_SERVER}:${REMOTE_PATH}/"
+                }
             }
         }
 
@@ -101,7 +107,7 @@ pipeline {
                 echo "Running DAST (OWASP ZAP) against ${STAGING_URL}..."
                 sh """
                     mkdir -p zap-reports
-                    ${ZAP_BIN} -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true
+                    ${ZAP_BIN} -daemon -host 0.0.0.0 -port 3000 -config api.disablekey=true
                     sleep 10
                     curl -s ${STAGING_URL} || true
                     ${ZAP_BIN} -cmd -quickurl ${STAGING_URL} -quickout zap-reports/zap-report.html || true
