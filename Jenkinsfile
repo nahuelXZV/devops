@@ -74,7 +74,7 @@ pipeline {
                 sshagent(['vue-nginx-1']) {
                     sh "scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/"
                     sh "ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'ls'"
-                    sh "ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'npm install --no-audit --no-fund && npm run start'"
+                    sh "ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'bash -lc \"npm install --no-audit --no-fund && npm run start\"'"
                 }
             }
         }
