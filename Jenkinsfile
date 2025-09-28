@@ -68,27 +68,19 @@ pipeline {
         //     }
         // }
 
-        stage('Deploy to Staging') {
-            steps {
-                echo "Deploying to staging with docker-compose..."
-                sshagent(['vue-nginx-1']) {
-                    // Copiar archivos al servidor
-                    sh "scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/"
-                    
-                    // Ejecutar npm usando bash de login y cargando NVM
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'bash -lc "
-                        export NVM_DIR=\\\"\$HOME/.nvm\\\"
-                        [ -s \\\"\\\$NVM_DIR/nvm.sh\\\" ] && \\. \\\"\$NVM_DIR/nvm.sh\\\"
-                        nvm use 18
-                        cd ${REMOTE_PATH}
-                        npm install --no-audit --no-fund
-                        npm run start
-                    "'
-                    """
-                }
-            }
-       }
+        sshagent(['vue-nginx-1']) {
+            sh """
+            scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/
+            ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'bash -lc "
+                export NVM_DIR=\"$HOME/.nvm\"
+                [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
+                nvm use 18
+                cd ${REMOTE_PATH}
+                npm install --no-audit --no-fund
+                npm run start
+            "'
+            """
+        }
 
 
         stage('DAST - OWASP ZAP scan') {
