@@ -9,6 +9,7 @@ pipeline {
         TRIVY_BIN = "/usr/local/bin/trivy"
         ZAP_BIN = "/opt/zaproxy/zap.sh"
         DEP_CHECK_BIN = "/opt/dependency-check/bin/dependency-check.sh"
+        NPM = "/home/user/.nvm/versions/node/v18.20.8/bin/npm"
     }
 
     options {
@@ -68,20 +69,15 @@ pipeline {
         //     }
         // }
 
-        sshagent(['vue-nginx-1']) {
-            sh """
-            scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/
-            ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'bash -lc "
-                export NVM_DIR=\"$HOME/.nvm\"
-                [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
-                nvm use 18
-                cd ${REMOTE_PATH}
-                npm install --no-audit --no-fund
-                npm run start
-            "'
-            """
+        stage('Deploy to Staging') {
+            steps {
+                echo "Deploying to staging with docker-compose..."
+                sshagent(['vue-nginx-1']) {
+                    sh "scp -o StrictHostKeyChecking=no -r src/* ${STAGING_SERVER}:${REMOTE_PATH}/"
+                    sh "ssh -o StrictHostKeyChecking=no ${STAGING_SERVER} 'bash -lc \"${NPM} install --no-audit --no-fund && ${NPM} run start\"'"
+                }
+            }
         }
-
 
         stage('DAST - OWASP ZAP scan') {
             steps {
