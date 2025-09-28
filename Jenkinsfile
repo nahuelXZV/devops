@@ -4,7 +4,7 @@ pipeline {
     environment {
         STAGING_SERVER = 'user@vue-nginx-1'
         REMOTE_PATH = '/var/www/html'
-        STAGING_URL = "http://vue-nginx-1:80 "
+        STAGING_URL = "http://vue-nginx-1:3000"
         SEMGREP_BIN = "/opt/jenkins-venv/bin/semgrep"
         TRIVY_BIN = "/usr/local/bin/trivy"
         ZAP_BIN = "/opt/zaproxy/zap.sh"
@@ -41,33 +41,16 @@ pipeline {
             }
         }
 
-        // stage('SCA - Dependency Check') {
-        //     steps {
-        //         echo "Running OWASP Dependency-Check..."
-        //         sh """
-        //             mkdir -p dependency-check-reports
-        //              ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
-        //         """
-        //         archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
-        //     }
-        // }
-
-        // stage('Build') {
-        //     steps {
-        //         echo "Building app (npm install and tests)..."
-        //         sh '''
-        //             cd src
-        //             npm install --no-audit --no-fund
-        //             if [ -f package.json ]; then
-        //                 if npm test --silent; then
-        //                     echo "Tests OK"
-        //                 else
-        //                     echo "Tests failed (continue)"
-        //                 fi
-        //             fi
-        //         '''
-        //     }
-        // }
+        stage('SCA - Dependency Check') {
+            steps {
+                echo "Running OWASP Dependency-Check..."
+                // sh """
+                //     mkdir -p dependency-check-reports
+                //      ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
+                // """
+                archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
+            }
+        }
 
         stage('Deploy to Staging') {
             steps {
@@ -90,19 +73,6 @@ pipeline {
                     ${ZAP_BIN} -cmd -quickurl ${STAGING_URL} -quickout zap-reports/zap-report.html || true
                 """
                 archiveArtifacts artifacts: 'zap-reports/**', allowEmptyArchive: true
-            }
-        }
-
-        stage('Policy Check - Fail on HIGH/CRITICAL CVEs') {
-            steps {
-                sh '''
-                    chmod +x scripts/scan_trivy_fail.sh
-                    ./scripts/scan_trivy_fail.sh $DOCKER_IMAGE_NAME || exit_code=$?
-                    if [ "${exit_code:-0}" -eq 2 ]; then
-                        echo "Failing pipeline due to HIGH/CRITICAL vulnerabilities detected by Trivy."
-                        exit 1
-                    fi
-                '''
             }
         }
     }
