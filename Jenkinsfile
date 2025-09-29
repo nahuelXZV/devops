@@ -44,11 +44,11 @@ pipeline {
         stage('SCA - Dependency Check') {
             steps {
                 echo "Running OWASP Dependency-Check..."
-                // sh """
-                //     mkdir -p dependency-check-reports
-                //      ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
-                // """
-                // archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
+                sh """
+                    mkdir -p dependency-check-reports
+                     ${DEP_CHECK_BIN} --noupdate --project "devsecops-labs" --scan . --format JSON --out dependency-check-reports || true
+                """
+                archiveArtifacts artifacts: 'dependency-check-reports/**', allowEmptyArchive: true
             }
         }
 
@@ -62,19 +62,33 @@ pipeline {
             }
         }
 
-        stage('DAST - OWASP ZAP scan') {
-            steps {
-                echo "Running DAST (OWASP ZAP) against ${STAGING_URL}..."
-                // sh """
-                //     mkdir -p zap-reports
-                //     ${ZAP_BIN} -daemon -host 0.0.0.0 -port 3000 -config api.disablekey=true
-                //     sleep 10
-                //     curl -s ${STAGING_URL} || true
-                //     ${ZAP_BIN} -cmd -quickurl ${STAGING_URL} -quickout zap-reports/zap-report.html || true
-                // """
-                // archiveArtifacts artifacts: 'zap-reports/**', allowEmptyArchive: true
-            }
-        }
+      stage('DAST - OWASP ZAP scan') {
+          steps {
+              echo "Running DAST (OWASP ZAP) against ${STAGING_URL}..."
+              sh """
+                  mkdir -p zap-reports
+
+                  # Iniciar ZAP en modo daemon en segundo plano
+                  ${ZAP_BIN} -daemon -host 0.0.0.0 -port 3000 -config api.disablekey=true &
+
+                  # Guardar el PID del daemon para poder matarlo al final
+                  ZAP_PID=\$!
+
+                  # Esperar a que ZAP esté listo
+                  sleep 15
+
+                  # Hacer una petición simple a la app
+                  curl -s ${STAGING_URL} || true
+
+                  # Ejecutar el escaneo rápido usando la API del daemon
+                  ${ZAP_BIN} -cmd -quickurl ${STAGING_URL} -quickout zap-reports/zap-report.html || true
+
+                  # Terminar el daemon de ZAP
+                  kill \$ZAP_PID
+              """
+              archiveArtifacts artifacts: 'zap-reports/**', allowEmptyArchive: true
+          }
+      }
     }
 
     post {
